@@ -1,5 +1,14 @@
+#include "sgemm.hpp"
+/**
+ * @brief 共享内存读取块计算, 一个block从全局内存读取一行块和一列块计算输出
+ *
+ * @param d_A Pointer to A on device, which with dimension M * K
+ * @param d_B Pointer to B on device, which with dimension K * N
+ * @param d_C Pointer to C on device, which with dimension M * N
+ * @param m, n, k Dimension arguments of shared memory
+ */
 __global__ void gemm_kernel2(float *d_A, float *d_B, float *d_C, int M, int N, int K, int m, int n, int k) {
-    extern __shared__ float sh[];
+    extern __shared__ float sh[]; // Block 启动的第三个参数
     float *A_sh = sh; // 
     float *B_sh = sh + m * k;
     // int N_index = idx % N; // C矩阵元素列号
@@ -30,6 +39,7 @@ __global__ void gemm_kernel2(float *d_A, float *d_B, float *d_C, int M, int N, i
     //     printf("C: %d total: %lf \n", M_tile_index * m * N + N_tile_index * n + m_index * N + n_index, total);
     d_C[(M_tile_index * m + m_index) * N + N_tile_index * n + n_index] = total;
 }
+
 float test2 () {
     test_start();
     int thread_size = min(m * n, C_size);
